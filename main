@@ -1,0 +1,3 @@
+#!/usr/bin/env python3
+from mwenclubhouse_discord import run_discord
+run_discord()
