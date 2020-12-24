@@ -51,11 +51,6 @@ def parse_int(s):
         return None
 
 
-def member_access(channel: TextChannel, author):
-    user_permission: Permissions = channel.permissions_for(author)
-    return user_permission.read_messages, user_permission.send_messages
-
-
 class DiscordWrapper:
 
     def __init__(self, client, firebase_wrapper: FirebaseWrapper):
@@ -91,7 +86,6 @@ class DiscordWrapper:
             return emoji, error
 
         if channel is not None:
-            member_access(channel, author)
             await channel.set_permissions(author, read_messages=False, send_messages=False)
             self.firebase_wrapper.set_channel(author.id, channel.id, status=False)
             return "✅", create_simple_message('Success!', f'leaving {channel}')
@@ -122,7 +116,7 @@ class DiscordWrapper:
                                                                 "type `ls` again.")
         if type(category) is not CategoryChannel:
             return "❌", create_simple_message("User Error", "You cannot"
-                                                            " cd inside a Category Channel")
+                                                            " `cd` inside a non Category Channel")
         self.firebase_wrapper.set_location(author.id, category.id)
 
         # Send Response
