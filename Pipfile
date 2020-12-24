@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 discord = "*"
 python-dotenv = "*"
+firebase-admin = "*"
+prettytable = "*"
 
 [dev-packages]
 

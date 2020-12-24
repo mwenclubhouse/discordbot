@@ -1,11 +1,13 @@
 import discord
 import os
 from .discord_wrapper import DiscordWrapper
+from .firebase_wrapper import FirebaseWrapper
 from dotenv import load_dotenv
 
 load_dotenv()
 client = discord.Client()
-wrapper = DiscordWrapper(client)
+firebase_wrapper = FirebaseWrapper()
+discord_wrapper = DiscordWrapper(client, firebase_wrapper)
 
 
 @client.event
@@ -17,7 +19,7 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return
-    await wrapper.handle_dm(message)
+    await discord_wrapper.handle_dm(message)
 
 
 def run_discord():

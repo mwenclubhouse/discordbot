@@ -145,5 +145,4 @@ keys/
 
 # Extra Files
 Pipfile.lock
-
-.env
+firebase.json
