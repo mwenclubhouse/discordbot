@@ -10,6 +10,7 @@ class FirebaseWrapper:
     def __init__(self):
         discord_id = os.getenv('DISCORD_BOT_ID')
         self.fireDb = firestore.firestore.Client().collection(u'discord').document(discord_id)
+        self.fireDb.set({}, merge=True)
 
     def user_collection(self, user_id):
         return self.fireDb.collection("users").document(user_id)
@@ -18,7 +19,10 @@ class FirebaseWrapper:
         return self.fireDb.get().to_dict()
 
     def get_user(self, user_id):
-        return self.user_collection(str(user_id)).get().to_dict()
+        snapshot = self.user_collection(str(user_id)).get()
+        if snapshot.exists:
+            return snapshot.to_dict()
+        return {}
 
     def set_channel(self, user_id, channel_id, status=True):
         new_data = {'channels': {str(channel_id): status}}
