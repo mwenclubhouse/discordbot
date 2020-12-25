@@ -1,2 +1,2 @@
 from .discord_config import run_discord
-from .firebase_wrapper import FirebaseWrapper
+from mwenclubhouse_discord.wrappers.firebase_wrapper import FirebaseWrapper

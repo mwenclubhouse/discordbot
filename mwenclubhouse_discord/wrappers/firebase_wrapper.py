@@ -1,6 +1,6 @@
 import os
 import firebase_admin
-from firebase_admin import firestore
+from firebase_admin.firestore import firestore
 
 firebase_admin.initialize_app()
 
@@ -9,14 +9,15 @@ class FirebaseWrapper:
 
     def __init__(self):
         discord_id = os.getenv('DISCORD_BOT_ID')
-        self.fireDb = firestore.firestore.Client().collection(u'discord').document(discord_id)
+        self.fireDb = firestore.Client().collection(u'discord').document(discord_id)
         self.fireDb.set({}, merge=True)
 
     def user_collection(self, user_id):
         return self.fireDb.collection("users").document(user_id)
 
     def get_discord_config(self):
-        return self.fireDb.get().to_dict()
+        response = self.fireDb.get().to_dict()
+        return {} if response is None else response
 
     def get_user(self, user_id):
         snapshot = self.user_collection(str(user_id)).get()
@@ -52,5 +53,5 @@ class FirebaseWrapper:
     def is_bot_channel(self, channel_id):
         config = self.get_discord_config()
         if 'bot-command' in config:
-            return channel_id == config['bot-command']
+            return channel_id == int(config['bot-command'])
         return False

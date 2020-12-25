@@ -1,0 +1,4 @@
+class UserDMChannel:
+
+    def __init__(self):
+        pass
