@@ -12,13 +12,13 @@ class UserCommand:
         self.head = None
         self.idx = 0
 
-    def parse_input(self, idx_none=0, category_none=0):
+    def parse_input(self, key,  idx_none=0, category_none=0):
         idx = parse_int(self.idx)
         if idx is None:
             self.response.set_error_response(idx_none)
             return
 
-        discord_category = DiscordWrapper.fire_b.select_by_idx(self.author.id, idx)
+        discord_category = DiscordWrapper.fire_b.select_by_idx(key, self.author.id, idx)
         if discord_category is None:
             self.response.set_error_response(category_none)
             return

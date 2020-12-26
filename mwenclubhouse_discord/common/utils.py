@@ -41,17 +41,6 @@ def get_error_response(idx, embed=None):
     return create_simple_message(item['title'], item['msg'], embed)
 
 
-def parse_channels(category):
-    discord_response = discord.Embed()
-    if category is not None:
-        for i, text in enumerate(category):
-            discord_response.add_field(name=f'{i}: {text.name}', value=f'{get_channel_type(text)}', inline=False)
-        return discord_response
-
-    discord_response.add_field(name='Error', value='Channel is Not Found')
-    return discord_response
-
-
 def parse_int(s):
     try:
         return int(s)

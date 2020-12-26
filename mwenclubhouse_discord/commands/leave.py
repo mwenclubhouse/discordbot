@@ -10,12 +10,12 @@ class UserCommandLeave(UserCommand):
         self.arguments = content[7:]
 
     def leave_single_channel(self):
-        self.parse_input(idx_none=UserError.UE_IVD_NUM, category_none=UserError.CE_TYPE_LS_CC)
+        self.parse_input('ls', idx_none=UserError.UE_IVD_NUM, category_none=UserError.CE_TYPE_LS_CC)
         if not self.response.done and self.head is None:
             self.response.set_error_response(UserError.CE_NF)
 
         if not self.response.done:
-            response = create_simple_message('Success!', f'leaving {self.head}')
+            response = create_simple_message('Success!', f'leaving {self.head}', self.response.response_tail)
             self.response.add_permissions(self.author, self.head, False)
             self.response.set_success_response(response)
 

@@ -15,7 +15,7 @@ class UserCommandJoin(UserCommand):
 
     def join_single_channel(self):
         # Validate Input
-        self.parse_input(idx_none=UserError.UE_IVD_NUM, category_none=UserError.CE_TYPE_LS_CC)
+        self.parse_input('ls', idx_none=UserError.UE_IVD_NUM, category_none=UserError.CE_TYPE_LS_CC)
         if not self.response.done and self.head is None:
             self.response.set_error_response(UserError.CE_NF)
 
@@ -35,7 +35,7 @@ class UserCommandJoin(UserCommand):
             self.idx = ''
             self.join_single_channel()
         else:
-            for i in self.arguments.split():
+            for i in args:
                 self.idx = i
                 self.join_single_channel()
                 self.response.done = False
