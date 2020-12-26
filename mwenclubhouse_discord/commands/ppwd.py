@@ -10,7 +10,7 @@ class UserPWD(UserCommand):
 
     @property
     def location_name(self):
-        location = DiscordWrapper.fire_b.get_location(self.author.id)
+        location = DiscordWrapper.fire_b.get_property('location', self.author.id)
         if location != '':
             channel = DiscordWrapper.client.get_channel(location)
             location = '' if channel is None else ("" + channel.name)
