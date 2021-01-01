@@ -1,5 +1,9 @@
 all_error_types = [
     {
+        'title': 'Unknown Error',
+        'msg': 'Ran into an Unknown error',
+    },
+    {
         'title': 'Parsing Error',
         'msg': "Please type a number representing a Category Channel you want to enter",
     },
@@ -31,12 +35,12 @@ all_error_types = [
 
 
 class UserError:
-    PS_ENTER_NUM = 0
-    UE_ENTER_LS = 1
-    CE_TYPE_LS_A = 2
-    UE_CD = 3
-    UE_IVD_NUM = 4
-    CE_TYPE_LS_CC = 5
-    CE_NF = 6
+    PS_ENTER_NUM = 1
+    UE_ENTER_LS = 2
+    CE_TYPE_LS_A = 3
+    UE_CD = 4
+    UE_IVD_NUM = 5
+    CE_TYPE_LS_CC = 6
+    CE_NF = 7
 
 

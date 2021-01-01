@@ -2,27 +2,28 @@ import discord
 import os
 from dotenv import load_dotenv
 
+from .commands import UserCommand
+from .commands.done import UserCommandDone
+from .commands.gauthcommand import GAuthCommand
 from .commands.ls import UserCommandLS
 from .commands.cd import UserCd
+from .commands.tasks import UserCommandTasks
 from .commands.ppwd import UserPWD
 from .commands.leave import UserCommandLeave
 from .commands.join import UserCommandJoin
+from .commands.sch import UserCommandSch
 from .common.user_response import UserResponse
+from .wrappers.calendar_wrapper import CalendarWrapper
 from .wrappers.discord_wrapper import DiscordWrapper
 from .wrappers.firebase_wrapper import FirebaseWrapper
+from .common.utils import iterate_commands
 
 load_dotenv()
 client = discord.Client()
 DiscordWrapper.client = client
 DiscordWrapper.fire_b = FirebaseWrapper()
+DiscordWrapper.gCal = CalendarWrapper()
 discord_wrapper = DiscordWrapper()
-
-
-def iterate_commands(content, commands):
-    for v, t in commands:
-        if content.startswith(v):
-            return t
-    return None
 
 
 def create_direct_command(content):
@@ -33,29 +34,35 @@ def create_direct_command(content):
 
 
 def create_scheduler_command(content):
-    return iterate_commands(content, [])
+    return iterate_commands(content, [
+        ('$tasks', UserCommandTasks),
+        ('$sch', UserCommandSch), ('$gauth', GAuthCommand),
+        ('$done', UserCommandDone)
+    ])
 
 
-def run(obj, author, content, response):
+async def run(obj, message, response):
     if obj is not None:
-        obj(author, content, response).run()
+        inst: UserCommand = obj(message.author, message.content, response)
+        await response.send_loading(message)
+        await inst.run()
 
 
-def handle_direct_message(message, response: UserResponse):
+async def handle_direct_message(message, response: UserResponse):
     if not response.done:
         if not DiscordWrapper.fire_b.is_bot_channel(message.channel.id, 'bot-command'):
             if type(message.channel) is not discord.DMChannel:
                 return
         content = message.content.lower()
-        run(create_direct_command(content), message.author, content, response)
+        await run(create_direct_command(content), message, response)
 
 
-def handle_scheduler_message(message, response: UserResponse):
+async def handle_scheduler_message(message, response: UserResponse):
     if not response.done:
         if not DiscordWrapper.fire_b.is_bot_channel(message.channel.id, 'bot-schedule'):
             return
         obj = create_scheduler_command(message.content)
-        run(obj, message.author, message.content, response)
+        await run(obj, message, response)
 
 
 @client.event
@@ -70,7 +77,7 @@ async def on_message(message):
     response: UserResponse = UserResponse()
     list_type = [handle_direct_message, handle_scheduler_message]
     for i in list_type:
-        i(message, response)
+        await i(message, response)
         if response.done:
             await response.send_message(message)
             return

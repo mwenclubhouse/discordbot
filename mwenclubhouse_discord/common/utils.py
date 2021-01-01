@@ -1,6 +1,10 @@
+from datetime import datetime, timedelta
+
 import discord
+import pytz
 from discord.channel import CategoryChannel, TextChannel, VoiceChannel
 from .error import all_error_types
+from mwenclubhouse_discord.features.todoist import get_parsed_date, get_task_url
 
 
 def find_category(channels, category_name):
@@ -46,3 +50,64 @@ def parse_int(s):
         return int(s)
     except ValueError:
         return None
+
+
+def iterate_commands(content, commands, starts_with=True):
+    for v, t in commands:
+        if (starts_with and content.startswith(v)) or \
+                (not starts_with and content == v):
+            return t
+    return None
+
+
+def add_todoist_field(message, i, t, todo):
+    project = todo.get_project(t['project_id'])
+    due_date = get_parsed_date(t, parentheses=True)
+    parent = todo.get_parent_task(None, item=t)
+    url = get_task_url(parent['id'])
+    message.add_field(name=f'{i}: {due_date} {project["project"]["name"]}',
+                      value=f'[{parent["content"]}]({url})',
+                      inline=False)
+
+
+def create_message_todoist(options, todo):
+    message = discord.Embed()
+    if len(options) > 0:
+        for i, task in enumerate(options):
+            add_todoist_field(message, i, task, todo)
+    else:
+        message.add_field(name="List is Empty", value="Add Tasks To Schedule")
+    return message
+
+
+def create_message_todoist_and_title(options, todo):
+    message = discord.Embed()
+    if len(options) > 0:
+        for i, task in enumerate(options):
+            if task['type'] == 'todoist':
+                add_todoist_field(message, i, task['item'], todo)
+            elif task['type'] == 'custom':
+                c = task['item']
+                message.add_field(name=f'{i}: {c}',
+                                  value='Custom Task',
+                                  inline=False)
+    else:
+        message.add_field(name="List is Empty", value="Add Tasks To Schedule")
+    return message
+
+
+def swap_items(items, idx1, idx2, error=None):
+    if idx1 < len(items) and idx2 < len(items):
+        temp = items[idx1]
+        items[idx1] = items[idx2]
+        items[idx2] = temp
+    elif error:
+        error()
+
+
+def get_datetime_from_hour_minute(hour, minute, user_timezone):
+    d = datetime.now(pytz.timezone(user_timezone))
+    d = d.replace(hour=hour, minute=minute)
+    if d.timestamp() < datetime.now().timestamp():
+        d = d + timedelta(days=1)
+    return d
