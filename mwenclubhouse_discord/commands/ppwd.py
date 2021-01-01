@@ -16,7 +16,7 @@ class UserPWD(UserCommand):
             location = '' if channel is None else ("" + channel.name)
         return "root" if location == '' else location
 
-    def run(self):
+    async def run(self):
         location = self.location_name
         response = create_simple_message('location', f'{location.lower()}')
         self.response.set_success_response(response)

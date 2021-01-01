@@ -12,17 +12,22 @@ class UserCommand:
         self.head = None
         self.idx = 0
 
-    def parse_input(self, key,  idx_none=0, category_none=0):
+    def parse_input_get_item(self, key, idx_none=0, category_none=0):
         idx = parse_int(self.idx)
         if idx is None:
             self.response.set_error_response(idx_none)
-            return
+            return None
 
         discord_category = DiscordWrapper.fire_b.select_by_idx(key, self.author.id, idx)
         if discord_category is None:
             self.response.set_error_response(category_none)
-            return
-        self.head = DiscordWrapper.client.get_channel(discord_category)
+            return None
+        return discord_category
 
-    def run(self):
+    def parse_input_set_head(self, key, idx_none=0, category_none=0):
+        response = self.parse_input_get_item(key, idx_none, category_none)
+        if response:
+            self.head = DiscordWrapper.client.get_channel(response)
+
+    async def run(self):
         pass

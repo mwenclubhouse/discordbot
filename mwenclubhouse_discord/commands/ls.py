@@ -42,6 +42,6 @@ class UserCommandLS(UserCommand):
         DiscordWrapper.fire_b.upload_selection('ls', self.author.id, self.category)
         return parse_channels(self.raw_category)
 
-    def run(self):
+    async def run(self):
         if not self.response.done:
             self.response.add_response(self.get_response(), done=True)

@@ -19,7 +19,7 @@ class UserCd(UserCommandLS):
             self.response.set_success_response(super().get_response())
 
     def handle_parse_input(self):
-        super().parse_input('ls', UserError.PS_ENTER_NUM, UserError.UE_ENTER_LS)
+        super().parse_input_set_head('ls', UserError.PS_ENTER_NUM, UserError.UE_ENTER_LS)
 
     def handle_category(self):
         if self.head is None:
@@ -33,7 +33,7 @@ class UserCd(UserCommandLS):
         # self.category = self.head.channels
         self.response.set_success_response(super().get_response())
 
-    def run(self):
+    async def run(self):
         if not self.response.done:
             steps = [self.handle_no_idx, self.handle_parse_input,
                      self.handle_category, self.handle_new_location]

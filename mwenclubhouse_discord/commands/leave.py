@@ -10,7 +10,7 @@ class UserCommandLeave(UserCommand):
         self.arguments = content[7:]
 
     def leave_single_channel(self):
-        self.parse_input('ls', idx_none=UserError.UE_IVD_NUM, category_none=UserError.CE_TYPE_LS_CC)
+        self.parse_input_set_head('ls', idx_none=UserError.UE_IVD_NUM, category_none=UserError.CE_TYPE_LS_CC)
         if not self.response.done and self.head is None:
             self.response.set_error_response(UserError.CE_NF)
 
@@ -22,7 +22,7 @@ class UserCommandLeave(UserCommand):
         if not self.response.done:
             self.response.set_error_response(UserError.CE_NF)
 
-    def run(self):
+    async def run(self):
         args = self.arguments.split()
         if len(args) == 0:
             self.idx = ''

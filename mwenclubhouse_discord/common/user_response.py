@@ -1,3 +1,4 @@
+import discord
 from discord import CategoryChannel
 
 from mwenclubhouse_discord.common import get_error_response
@@ -13,6 +14,7 @@ class UserResponse:
 
         # (Channel, Author, Access)
         self.permissions = []
+        self.loading = False
 
     @property
     def response_tail(self):
@@ -50,6 +52,11 @@ class UserResponse:
             if type(channel) is CategoryChannel:
                 for i in channel.channels:
                     self.add_permissions(author, i, access)
+
+    async def send_loading(self, message):
+        if self.loading:
+            response = discord.Embed().add_field(name="Loading", value="Loading Content")
+            await message.channel.send(embed=response)
 
     async def send_message(self, message):
         for author, channel, access in self.permissions:
