@@ -30,6 +30,10 @@ all_error_types = [
     {
         'title': 'Computer Error',
         'msg': 'Channel is Not Found'
+    },
+    {
+        'title': 'Authorization Error',
+        'msg': 'You are not logged into 1 or more services'
     }
 ]
 
@@ -42,5 +46,4 @@ class UserError:
     UE_IVD_NUM = 5
     CE_TYPE_LS_CC = 6
     CE_NF = 7
-
-
+    AUTHORIZATION_ERROR = 8

@@ -3,6 +3,7 @@ from typing import List
 
 from mwenclubhouse_discord.commands.sch import UserCommandSch
 from mwenclubhouse_discord.common import UserResponse
+from mwenclubhouse_discord.common.error import UserError
 from mwenclubhouse_discord.wrappers.discord_wrapper import DiscordWrapper
 
 
@@ -33,5 +34,5 @@ class UserCommandDone(UserCommandSch):
         end_time = datetime.fromtimestamp(epoch_time)
         self.adjust_calendar(response, end_time)
 
-    async def run(self):
+    async def sch_run(self):
         await self.mark_done()
