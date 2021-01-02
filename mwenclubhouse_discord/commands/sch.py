@@ -6,6 +6,7 @@ from mwenclubhouse_discord.features.calendar import MWCalendar, create_firebase_
 from mwenclubhouse_discord.features.todoist import MWTodoist
 from mwenclubhouse_discord.wrappers.discord_wrapper import DiscordWrapper
 from . import UserCommand
+from mwenclubhouse_discord.common.error import UserError
 
 
 class UserCommandSch(UserCommand):
@@ -183,11 +184,17 @@ class UserCommandSch(UserCommand):
             ('insert', self.insert_action)
         ], starts_with=False)
 
+    async def sch_run(self):
+        if len(self.args) > 0:
+            method = self.create_sch_action()
+            if method is not None:
+                await method()
+        else:
+            self.response.set_error_response(0)
+
     async def run(self):
         if not self.response.done:
-            if len(self.args) > 0:
-                method = self.create_sch_action()
-                if method is not None:
-                    await method()
-            else:
-                self.response.set_error_response(0)
+            if not self.gcal.is_logged_in():
+                self.response.set_error_response(UserError.AUTHORIZATION_ERROR, True)
+                return
+            await self.sch_run()

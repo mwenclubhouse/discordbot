@@ -67,6 +67,9 @@ class MWCalendar:
         self.cred = self.get_credentials()
         self.service = self.get_service()
 
+    def is_logged_in(self):
+        return self.cred is not None and self.service is not None
+
     def get_credentials(self):
         location = f'discord/{self.author_id}/token.pickle'
         raw_data = DiscordWrapper.fire_b.get_file(location)
@@ -107,11 +110,13 @@ class MWCalendar:
 
     def get_events(self, end):
         now = datetime.utcnow().isoformat() + 'Z'
-        events_result = self.service.events().list(calendarId='primary', timeMin=now,
-                                                   timeMax=get_iso_from_datetime(end),
-                                                   singleEvents=True,
-                                                   orderBy='startTime').execute()
-        return events_result.get('items', [])
+        if self.service:
+            events_result = self.service.events().list(calendarId='primary', timeMin=now,
+                                                       timeMax=get_iso_from_datetime(end),
+                                                       singleEvents=True,
+                                                       orderBy='startTime').execute()
+            return events_result.get('items', [])
+        return []
 
     def delete_calendar(self, item):
         try:
@@ -122,14 +127,15 @@ class MWCalendar:
             return
 
     def complete_calendar(self, item):
-        details = self.service.events().get(calendarId='primary', eventId=item['cal_id']).execute()
-        user_timezone = self.timezone
-        if user_timezone is None or details is None:
-            return
-        now_time = datetime.utcnow().isoformat() + 'Z'
-        details['end'] = {'dateTime': now_time, 'timeZone': user_timezone}
-        self.service.events().update(calendarId='primary', eventId=item['cal_id'],
-                                     body=details).execute()
+        if self.service:
+            details = self.service.events().get(calendarId='primary', eventId=item['cal_id']).execute()
+            user_timezone = self.timezone
+            if user_timezone is None or details is None:
+                return
+            now_time = datetime.utcnow().isoformat() + 'Z'
+            details['end'] = {'dateTime': now_time, 'timeZone': user_timezone}
+            self.service.events().update(calendarId='primary', eventId=item['cal_id'],
+                                         body=details).execute()
 
     def clean_calendar(self, items):
         i, last_item = 0, None
@@ -142,12 +148,13 @@ class MWCalendar:
                 i += 1
 
     def add_tasks_to_calendar(self, items, end, todo: MWTodoist):
-        self.clean_calendar(items)
-        events = MyEventQueue(items, self.get_events(end), end)
-        user_timezone = self.timezone
-        for task, start_time, end_time in events:
-            details = create_cal_event_from_todoist(task, todo, start_time, end_time, user_timezone)
-            edit_event(task, self.service, details)
+        if self.service:
+            self.clean_calendar(items)
+            events = MyEventQueue(items, self.get_events(end), end)
+            user_timezone = self.timezone
+            for task, start_time, end_time in events:
+                details = create_cal_event_from_todoist(task, todo, start_time, end_time, user_timezone)
+                edit_event(task, self.service, details)
 
 
 def parse_google_cal_event_time(event, key):

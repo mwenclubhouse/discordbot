@@ -78,10 +78,12 @@ class MWTodoist:
     def get_upcoming_tasks(self):
         def filter_tasks(item):
             item_time = get_date(item)
-            return False if item_time is None else (datetime.now() + timedelta(days=7)) >= item_time
+            within_range = item_time is not None and item_time <= datetime.now() + timedelta(days=7)
+            return within_range and item['date_completed'] is None
 
         def sort_task(item):
-            return get_date(item)
+            key_value = get_date(item)
+            return key_value if key_value is not None else datetime.now()
 
         query_tasks = [] if self.api is None else self.api.items.all(filt=filter_tasks)
         response = [i for i in query_tasks if self.is_section_in_progress(i['section_id'])]
