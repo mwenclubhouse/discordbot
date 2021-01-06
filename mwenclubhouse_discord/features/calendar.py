@@ -110,6 +110,8 @@ class MWCalendar:
 
     def get_events(self, end):
         now = datetime.utcnow().isoformat() + 'Z'
+        if end is None:
+            end = datetime.utcnow() + timedelta(hours=24)
         if self.service:
             events_result = self.service.events().list(calendarId='primary', timeMin=now,
                                                        timeMax=get_iso_from_datetime(end),
@@ -147,14 +149,16 @@ class MWCalendar:
                 last_item = items[i]
                 i += 1
 
-    def add_tasks_to_calendar(self, items, end, todo: MWTodoist):
+    def add_tasks_to_calendar(self, items, end, todo: MWTodoist, set_start_time_now=True):
         if self.service:
             self.clean_calendar(items)
-            events = MyEventQueue(items, self.get_events(end), end)
+            events = MyEventQueue(items, self.get_events(end), end, set_start_time_now)
             user_timezone = self.timezone
             for task, start_time, end_time in events:
                 details = create_cal_event_from_todoist(task, todo, start_time, end_time, user_timezone)
                 edit_event(task, self.service, details)
+            return events.end_time
+        return None
 
 
 def parse_google_cal_event_time(event, key):
@@ -187,32 +191,56 @@ def get_iso_from_datetime(datetime_item):
 
 class MyEventQueue:
 
-    def __init__(self, tasks, events, end_time):
+    def __init__(self, tasks, events, end_time, set_start_time_now=True):
         self.tasks = tasks
         self.events = events
-        self.end_time = end_time
+
+        self.calendar_set = self.get_calendar_set()
+        self.start_time = self.get_start_time(set_start_time_now)
+        self.end_time = self.get_end_time(end_time)
         self.tasks_duration = self.create_duration_stack()
+
         self.iterated_items = []
 
-    def task_calendar_set(self):
+    def get_calendar_set(self):
         calendar_id = set()
         for i in self.tasks:
             calendar_id.add(i['cal_id'])
         return calendar_id
 
-    def get_available_time(self):
-        calendar_set = self.task_calendar_set()
-        time_available = self.end_time.timestamp() - datetime.now().timestamp()
+    def get_start_time(self, set_start_time_now):
+        if set_start_time_now:
+            return datetime.now()
+        min_value = datetime.now()
+        for item in self.events:
+            if item['id'] in self.calendar_set:
+                start = parse_google_cal_event_time(item, 'start')
+                if min_value.timestamp() > start.timestamp():
+                    min_value = start
+        return min_value
+
+    def get_end_time(self, end_time):
+        self.end_time = datetime.now() if end_time is None else end_time
+        space_allocated = self.get_available_time(min_val=None)
+        if space_allocated <= 0:
+            seconds = 60 * 60 * len(self.tasks) - space_allocated
+            end_time += timedelta(seconds=seconds)
+        return end_time
+
+    def get_available_time(self, min_val=None):
+        calendar_set = self.calendar_set
+        time_available = self.end_time.timestamp() - self.start_time.timestamp()
         for i in self.events:
             if i['id'] not in calendar_set:
-                time_available -= get_event_duration(i, min_start=datetime.now())
-            time_available = time_available if time_available > 0 else 0
+                time_available -= get_event_duration(i, min_start=self.start_time.timestamp())
+        if min_val is not None:
+            time_available = time_available if time_available > min_val else min_val
         return time_available
 
     def create_duration_stack(self):
         if len(self.tasks) == 0:
             return []
-        duration = self.get_available_time() / len(self.tasks)
+        duration = self.get_available_time(min_val=0) / len(self.tasks)
         return [duration for _ in self.tasks]
 
     def parse_next_calendar_event(self, calendar_set):
@@ -255,8 +283,8 @@ class MyEventQueue:
         return start_time, end_time, t, next_start
 
     def __iter__(self):
-        start_time = datetime.now()
-        calendar_set = self.task_calendar_set()
+        start_time = self.start_time
+        calendar_set = self.calendar_set
         while len(self.tasks) > 0:
             start_time, end_time, t, next_start = self.decrement_time(start_time, calendar_set)
             yield t, start_time, end_time

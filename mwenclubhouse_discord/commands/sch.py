@@ -82,6 +82,7 @@ class UserCommandSch(UserCommand):
                 item = create_firebase_todo_calendar(title=i)
             response.append(item)
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
+        await self.update_calendar(response)
         await self.list_action()
 
     def is_valid_index(self, idx, items):
@@ -104,6 +105,11 @@ class UserCommandSch(UserCommand):
 
         return idx1, response, idx2, selection_options
 
+    async def update_calendar(self, user_tasks):
+        epoch_time = DiscordWrapper.fire_b.get_user_end_time(self.author.id)
+        end_time = datetime.fromtimestamp(epoch_time) if epoch_time is not None else epoch_time
+        self.adjust_calendar(user_tasks, end_time=end_time, set_start_time_now=False)
+
     async def insert_action(self):
         idx1, response, idx2, selection_options = self.getting_options_and_parameters()
         if self.response.done:
@@ -114,6 +120,7 @@ class UserCommandSch(UserCommand):
             item = create_firebase_todo_calendar(title=idx2)
         response.insert(idx1, item)
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
+        await self.update_calendar(response)
         await self.list_action()
 
     async def set_action(self):
@@ -128,6 +135,7 @@ class UserCommandSch(UserCommand):
         else:
             response[idx1] = create_firebase_todo_calendar(title=idx2)
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
+        await self.update_calendar(response)
         await self.list_action()
 
     async def swap_action(self):
@@ -137,15 +145,16 @@ class UserCommandSch(UserCommand):
             swap_items(response, idx1, idx2, lambda: self.response.set_error_response(0))
             if not self.response.done:
                 DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
+            await self.update_calendar(response)
             await self.list_action()
 
-    def adjust_calendar(self, user_tasks, end_time):
-        self.gcal.add_tasks_to_calendar(user_tasks, end_time, self.todo)
+    def adjust_calendar(self, user_tasks, end_time=None, set_start_time_now=True):
+        end_time = self.gcal.add_tasks_to_calendar(user_tasks, end_time, self.todo, set_start_time_now)
         DiscordWrapper.fire_b.set_discord_config({'end-time': {str(self.author.id): end_time.timestamp()}})
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, user_tasks)
-        self.response.set_state(True, True)
+        self.response.set_state(True, False)
 
-    async def build_action(self):
+    async def update_action(self, set_start_time_now=False):
         state, hour, minute = self.parse_time_arguments()
         if state is not None:
             self.response.set_error_response(state, True)
@@ -153,7 +162,11 @@ class UserCommandSch(UserCommand):
 
         user_tasks: List = DiscordWrapper.fire_b.get_property('today-task', self.author.id, [])
         end_time = get_datetime_from_hour_minute(hour, minute, self.gcal.timezone)
-        self.adjust_calendar(user_tasks, end_time)
+        self.adjust_calendar(user_tasks, end_time=end_time, set_start_time_now=set_start_time_now)
+        await self.list_action()
+
+    async def build_action(self):
+        await self.update_action(set_start_time_now=True)
 
     async def remove_action(self):
         response: List = DiscordWrapper.fire_b.get_property('today-task', self.author.id, [])
@@ -167,6 +180,7 @@ class UserCommandSch(UserCommand):
             else:
                 self.response.set_error_response(0, False)
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
+        await self.update_calendar(response)
         await self.list_action()
 
     async def list_action(self, user_tasks=None):
@@ -181,7 +195,7 @@ class UserCommandSch(UserCommand):
             ('add', self.add_action), ('set', self.set_action),
             ('swap', self.swap_action), ('build', self.build_action),
             ('list', self.list_action), ('remove', self.remove_action),
-            ('insert', self.insert_action)
+            ('insert', self.insert_action), ('update', self.update_action)
         ], starts_with=False)
 
     async def sch_run(self):
