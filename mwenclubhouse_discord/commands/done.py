@@ -32,7 +32,8 @@ class UserCommandDone(UserCommandSch):
             return
 
         end_time = datetime.fromtimestamp(epoch_time)
-        self.adjust_calendar(response, end_time)
+        self.adjust_calendar(response, end_time=end_time)
+        self.response.done = True
 
     async def sch_run(self):
         await self.mark_done()
