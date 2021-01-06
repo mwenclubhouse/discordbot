@@ -232,7 +232,7 @@ class MyEventQueue:
         time_available = self.end_time.timestamp() - self.start_time.timestamp()
         for i in self.events:
             if i['id'] not in calendar_set:
-                time_available -= get_event_duration(i, min_start=self.start_time.timestamp())
+                time_available -= get_event_duration(i, min_start=self.start_time)
         if min_val is not None:
             time_available = time_available if time_available > min_val else min_val
         return time_available
