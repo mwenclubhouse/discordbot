@@ -251,7 +251,7 @@ class MyEventQueue:
         return None
 
     def insert_task_to_front(self, t, d):
-        item = create_firebase_todo_calendar(task_id=t['task_id'])
+        item = create_firebase_todo_calendar(task_id=t['task_id'], title=t['title'])
         self.tasks.insert(0, item)
         self.tasks_duration.insert(0, d)
         return self.tasks[0], self.tasks_duration[0]
