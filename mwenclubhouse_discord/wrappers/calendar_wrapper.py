@@ -14,5 +14,5 @@ class CalendarWrapper:
         return InstalledAppFlow.from_client_secrets_file(
             self.cred_location,
             scopes,
-            redirect_uri="https://api.matthewwen.com/oauth/google/code"
+            redirect_uri="https://www.matthewwen.com/discord/google"
         )
