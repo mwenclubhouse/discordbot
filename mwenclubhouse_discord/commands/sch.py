@@ -82,6 +82,7 @@ class UserCommandSch(UserCommand):
                 item = create_firebase_todo_calendar(title=i)
             response.append(item)
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
+        print(response)
         await self.update_calendar(response)
         await self.list_action()
 

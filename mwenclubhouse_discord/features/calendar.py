@@ -128,21 +128,31 @@ class MWCalendar:
         except HttpError:
             return
 
-    def complete_calendar(self, item):
+    def complete_calendar(self, items):
         if self.service:
-            details = self.service.events().get(calendarId='primary', eventId=item['cal_id']).execute()
-            user_timezone = self.timezone
-            if user_timezone is None or details is None:
-                return
-            now_time = datetime.utcnow().isoformat() + 'Z'
-            details['end'] = {'dateTime': now_time, 'timeZone': user_timezone}
-            self.service.events().update(calendarId='primary', eventId=item['cal_id'],
-                                         body=details).execute()
+            now_time = datetime.now()
+            for item in items:
+                details = self.service.events().get(calendarId='primary', eventId=item['cal_id']).execute()
+                user_timezone = self.timezone
+                if user_timezone is None or details is None:
+                    continue
+                start = parse_google_cal_event_time(details, 'start')
+                end = parse_google_cal_event_time(details, 'end')
+                if end.timestamp() <= now_time.timestamp():
+                    pass
+                elif time_in_event(details, now_time):
+                    details['end'] = {'dateTime': datetime.utcnow().isoformat() + 'Z', 'timeZone': user_timezone}
+                    self.service.events().update(calendarId='primary', eventId=item['cal_id'],
+                                                 body=details).execute()
+                elif now_time.timestamp() <= start.timestamp():
+                    self.delete_calendar(item)
 
     def clean_calendar(self, items):
         i, last_item = 0, None
         while i < len(items):
-            if last_item is not None and last_item['task_id'] and last_item['task_id'] == items[i]['task_id']:
+            if (last_item is not None and
+                    (last_item['task_id'] == items[i]['task_id'] and
+                     last_item['title'] == items[i]['title'])):
                 self.delete_calendar(items[i])
                 del items[i]
             else:
@@ -177,6 +187,11 @@ def time_in_event(event, t):
     start = parse_google_cal_event_time(event, 'start')
     end = parse_google_cal_event_time(event, 'end')
     return start.timestamp() <= t.timestamp() <= end.timestamp()
+
+
+def time_after_event_start(event, t):
+    start = parse_google_cal_event_time(event, 'start')
+    return start.timestamp() <= t.timestamp()
 
 
 def event_overlap(e1, e2):
@@ -268,7 +283,7 @@ class MyEventQueue:
             next_event = self.parse_next_calendar_event(calendar_set)
 
         # Check Event End
-        if next_event and time_in_event(next_event, start_time + timedelta(seconds=d)):
+        if next_event and time_after_event_start(next_event, start_time + timedelta(seconds=d)):
             d = parse_google_cal_event_time(next_event, 'start').timestamp() - start_time.timestamp()
             self.tasks_duration[0] -= d
             next_start = parse_google_cal_event_time(next_event, 'end')
