@@ -131,21 +131,30 @@ class MWCalendar:
     def complete_calendar(self, items):
         if self.service:
             now_time = datetime.now()
+            user_timezone = self.timezone
+
+            def update_event(event_details, event_item):
+                event_details['end'] = {'dateTime': datetime.utcnow().isoformat() + 'Z', 'timeZone': user_timezone}
+                self.service.events().update(calendarId='primary', eventId=event_item['cal_id'],
+                                             body=event_details).execute()
+
+            did_update, last_detail, last_item = False, None, None
             for item in items:
                 details = self.service.events().get(calendarId='primary', eventId=item['cal_id']).execute()
-                user_timezone = self.timezone
                 if user_timezone is None or details is None:
                     continue
                 start = parse_google_cal_event_time(details, 'start')
                 end = parse_google_cal_event_time(details, 'end')
                 if end.timestamp() <= now_time.timestamp():
-                    pass
+                    last_detail, last_item = details, item
                 elif time_in_event(details, now_time):
-                    details['end'] = {'dateTime': datetime.utcnow().isoformat() + 'Z', 'timeZone': user_timezone}
-                    self.service.events().update(calendarId='primary', eventId=item['cal_id'],
-                                                 body=details).execute()
+                    did_update = True
+                    update_event(details, item)
                 elif now_time.timestamp() <= start.timestamp():
                     self.delete_calendar(item)
+
+            if (not did_update) and last_item is not None and last_detail is not None:
+                update_event(last_detail, last_item)
 
     def clean_calendar(self, items):
         i, last_item = 0, None
