@@ -191,12 +191,29 @@ class UserCommandSch(UserCommand):
         response = create_message_todoist_and_title(self.raw_tasks, self.todo)
         self.response.add_response(response, done=True)
 
+    async def move_action(self):
+        idx1, idx2 = self.get_two_arguments()
+        if self.response.done:
+            return
+        response = DiscordWrapper.fire_b.get_property('today-task', self.author.id, [])
+        if (idx1 >= len(response) or idx2 >= len(response) or
+                idx1 < 0 or idx2 < 0):
+            self.response.set_error_response(0, True)
+            return
+        item = response[idx1]
+        del response[idx1]
+        response.insert(idx2, item)
+        DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
+        await self.update_calendar(response)
+        await self.list_action()
+
     def create_sch_action(self):
         return iterate_commands(self.args[0], [
             ('add', self.add_action), ('set', self.set_action),
             ('swap', self.swap_action), ('build', self.build_action),
             ('list', self.list_action), ('remove', self.remove_action),
-            ('insert', self.insert_action), ('update', self.update_action)
+            ('insert', self.insert_action), ('update', self.update_action),
+            ('move', self.move_action)
         ], starts_with=False)
 
     async def sch_run(self):
