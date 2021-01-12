@@ -82,7 +82,6 @@ class UserCommandSch(UserCommand):
                 item = create_firebase_todo_calendar(title=i)
             response.append(item)
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
-        print(response)
         await self.update_calendar(response)
         await self.list_action()
 
@@ -150,7 +149,7 @@ class UserCommandSch(UserCommand):
             await self.list_action()
 
     def adjust_calendar(self, user_tasks, end_time=None, set_start_time_now=True):
-        end_time = self.gcal.add_tasks_to_calendar(user_tasks, end_time, self.todo, set_start_time_now)
+        end_time, user_tasks = self.gcal.add_tasks_to_calendar(user_tasks, end_time, self.todo, set_start_time_now)
         DiscordWrapper.fire_b.set_discord_config({'end-time': {str(self.author.id): end_time.timestamp()}})
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, user_tasks)
         self.response.set_state(True, False)
