@@ -12,6 +12,8 @@ from .commands.ppwd import UserPWD
 from .commands.leave import UserCommandLeave
 from .commands.join import UserCommandJoin
 from .commands.sch import UserCommandSch
+from .commands.command_break import UserCommandBreak
+from .commands.wait import UserCommandWait
 from .common.user_response import UserResponse
 from .wrappers.calendar_wrapper import CalendarWrapper
 from .wrappers.discord_wrapper import DiscordWrapper
@@ -37,7 +39,8 @@ def create_scheduler_command(content):
     return iterate_commands(content, [
         ('$tasks', UserCommandTasks),
         ('$sch', UserCommandSch), ('$gauth', GAuthCommand),
-        ('$done', UserCommandDone)
+        ('$done', UserCommandDone), ('$break', UserCommandBreak),
+        ('$wait', UserCommandWait),
     ])
 
 
