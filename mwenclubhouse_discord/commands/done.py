@@ -20,12 +20,18 @@ class UserCommandDone(UserCommandSch):
         i = 0
         top_item = response[0]
         delete_event = top_item['title'] == 'wait'
+
+        found_end = False
         for i, item in enumerate(response):
             if (top_item['task_id'] != item['task_id'] or
                     top_item['title'] != item['title']):
+                found_end = True
                 break
             elif delete_event:
                 self.gcal.delete_calendar(item)
+
+        if not found_end:
+            i = len(response)
 
         if not delete_event:
             self.gcal.complete_calendar(response[:i])

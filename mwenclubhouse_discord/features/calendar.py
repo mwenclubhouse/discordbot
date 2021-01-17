@@ -269,6 +269,7 @@ class MyEventQueue:
         if len(self.tasks) == 0:
             return []
         duration = self.get_available_time(min_val=0) / len(self.tasks)
+        duration = 45 if duration <= 45 else duration
         return [duration for _ in self.tasks]
 
     def parse_next_calendar_event(self):
