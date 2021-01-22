@@ -19,7 +19,7 @@ class UserCommandDone(UserCommandSch):
 
         i = 0
         top_item = response[0]
-        delete_event = top_item['title'] == 'wait'
+        delete_event = top_item['title'] in ['wait', 'break']
 
         found_end = False
         for i, item in enumerate(response):

@@ -42,18 +42,21 @@ def create_cal_event_from_todoist(i, todo: MWTodoist, start, end, user_timezone)
 
 
 def edit_event(i, service, details):
-    if i['cal_id'] is not None:
-        service.events().update(
+    try:
+        if i['cal_id'] is not None:
+            service.events().update(
+                calendarId="primary",
+                eventId=i['cal_id'],
+                body=details
+            ).execute()
+            return
+        i['cal_id'] = service.events().insert(
             calendarId="primary",
-            eventId=i['cal_id'],
-            body=details
-        ).execute()
-        return
-    i['cal_id'] = service.events().insert(
-        calendarId="primary",
-        body=details,
-        sendNotifications=True,
-    ).execute()['id']
+            body=details,
+            sendNotifications=True,
+        ).execute()['id']
+    except HttpError:
+        pass
 
 
 def update_calendar(author_id):
@@ -103,9 +106,12 @@ class MWCalendar:
     @property
     def timezone(self):
         if self.service:
-            response = self.service.settings().get(setting="timezone").execute()
-            if response:
-                return response['value']
+            try:
+                response = self.service.settings().get(setting="timezone").execute()
+                if response:
+                    return response['value']
+            except HttpError:
+                pass
         return None
 
     def delete_calendar(self, item):
@@ -123,8 +129,11 @@ class MWCalendar:
 
             def update_event(event_details, event_item):
                 event_details['end'] = {'dateTime': datetime.utcnow().isoformat() + 'Z', 'timeZone': user_timezone}
-                self.service.events().update(calendarId='primary', eventId=event_item['cal_id'],
-                                             body=event_details).execute()
+                try:
+                    self.service.events().update(calendarId='primary', eventId=event_item['cal_id'],
+                                                 body=event_details).execute()
+                except HttpError:
+                    pass
 
             did_update, last_detail, last_item = False, None, None
             for item in items:
@@ -221,12 +230,15 @@ class MyEventQueue:
         if end is None:
             end = datetime.utcnow() + timedelta(hours=24)
         if self.service:
-            events_result = self.service.events().list(calendarId='primary',
-                                                       timeMin=get_iso_from_datetime(self.start_time),
-                                                       timeMax=get_iso_from_datetime(end),
-                                                       singleEvents=True,
-                                                       orderBy='startTime').execute()
-            return events_result.get('items', [])
+            try:
+                events_result = self.service.events().list(calendarId='primary',
+                                                           timeMin=get_iso_from_datetime(self.start_time),
+                                                           timeMax=get_iso_from_datetime(end),
+                                                           singleEvents=True,
+                                                           orderBy='startTime').execute()
+                return events_result.get('items', [])
+            except HttpError:
+                pass
         return []
 
     def get_calendar_set(self):
@@ -241,10 +253,13 @@ class MyEventQueue:
         min_value = datetime.now()
         for item in self.tasks:
             if 'cal_id' in item and item['cal_id'] is not None:
-                details = self.service.events().get(calendarId='primary', eventId=item['cal_id']).execute()
-                start = parse_google_cal_event_time(details, 'start')
-                if min_value.timestamp() > start.timestamp():
-                    min_value = start
+                try:
+                    details = self.service.events().get(calendarId='primary', eventId=item['cal_id']).execute()
+                    start = parse_google_cal_event_time(details, 'start')
+                    if min_value.timestamp() > start.timestamp():
+                        min_value = start
+                except HttpError:
+                    pass
         return min_value
 
     def get_end_time(self, end_time):
