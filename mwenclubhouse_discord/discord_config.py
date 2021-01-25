@@ -7,6 +7,7 @@ from .commands.done import UserCommandDone
 from .commands.gauthcommand import GAuthCommand
 from .commands.ls import UserCommandLS
 from .commands.cd import UserCd
+from .commands.postpone import UserCommandPostpone
 from .commands.tasks import UserCommandTasks
 from .commands.ppwd import UserPWD
 from .commands.leave import UserCommandLeave
@@ -40,7 +41,7 @@ def create_scheduler_command(content):
         ('$tasks', UserCommandTasks),
         ('$sch', UserCommandSch), ('$gauth', GAuthCommand),
         ('$done', UserCommandDone), ('$break', UserCommandBreak),
-        ('$wait', UserCommandWait),
+        ('$wait', UserCommandWait), ('$postpone', UserCommandPostpone)
     ])
 
 
