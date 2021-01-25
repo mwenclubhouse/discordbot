@@ -44,36 +44,54 @@ class MWTodoist:
         self.sync_api()
 
     def sync_api(self):
-        if self.api is not None:
-            self.api.sync()
+        try:
+            if self.api is not None:
+                self.api.sync()
+        except AttributeError:
+            pass
 
     def commit_api(self):
-        if self.api is not None:
-            self.api.commit()
+        try:
+            if self.api is not None:
+                self.api.commit()
+        except AttributeError:
+            pass
 
     def is_section_in_progress(self, section_id):
-        if section_id is None:
-            return True
-        section = None if self.api is None else self.api.sections.get_by_id(section_id)
-        return section is None or section['name'] not in ['Finished']
+        try:
+            if section_id is None:
+                return True
+            section = None if self.api is None else self.api.sections.get_by_id(section_id)
+            return section is None or section['name'] not in ['Finished']
+        except AttributeError:
+            return False
 
     def get_parent_task(self, item_id, item=None):
-        item = self.get_item(item_id) if item is None else item
-        if 'parent_id' in item and item['parent_id'] is not None:
-            return self.get_parent_task(item['parent_id'])
-        return item
+        try:
+            item = self.get_item(item_id) if item is None else item
+            if 'parent_id' in item and item['parent_id'] is not None:
+                return self.get_parent_task(item['parent_id'])
+            return item
+        except AttributeError:
+            return None
 
     def move_task_to_section(self, name, task: Item):
-        destination = self.get_section_by_name(name, task['project_id'])
-        if destination is not None:
-            task.update(content='Another One bang')
-            self.api.items.move(task['id'], section_id=destination['id'])
+        try:
+            destination = self.get_section_by_name(name, task['project_id'])
+            if destination is not None:
+                task.update(content='Another One bang')
+                self.api.items.move(task['id'], section_id=destination['id'])
+        except AttributeError:
+            pass
 
     def get_section_by_name(self, name, project_id):
-        for i in self.api.sections.all():
-            if i['project_id'] == project_id and i['name'] == name:
-                return i
-        return None
+        try:
+            for i in self.api.sections.all():
+                if i['project_id'] == project_id and i['name'] == name:
+                    return i
+            return None
+        except AttributeError:
+            return None
 
     def get_upcoming_tasks(self):
         def filter_tasks(item):
@@ -85,35 +103,56 @@ class MWTodoist:
             key_value = get_date(item)
             return key_value if key_value is not None else datetime.now()
 
-        query_tasks = [] if self.api is None else self.api.items.all(filt=filter_tasks)
-        response = [i for i in query_tasks if self.is_section_in_progress(i['section_id'])]
-        return sorted(response, key=sort_task)
+        try:
+            query_tasks = [] if self.api is None else self.api.items.all(filt=filter_tasks)
+            response = [i for i in query_tasks if self.is_section_in_progress(i['section_id'])]
+            return sorted(response, key=sort_task)
+        except AttributeError:
+            return []
 
     def get_project(self, project_id):
-        project = None if self.api is None else self.api.projects.get(project_id)
-        return {} if project is None else project
+        try:
+            project = None if self.api is None else self.api.projects.get(project_id)
+            return {} if project is None else project
+        except AttributeError:
+            return {}
 
     def get_section(self, section_id):
-        section = self.api.sections.get(section_id)
-        return {} if section is None else section
+        try:
+            section = self.api.sections.get(section_id)
+            return {} if section is None else section
+        except AttributeError:
+            return {}
 
     def get_item(self, item_id):
-        item = self.api.items.get(item_id)
-        return {} if item is None else item['item']
+        try:
+            item = self.api.items.get(item_id)
+            return {} if item is None else item['item']
+        except AttributeError:
+            return {}
 
     def iterate_tasks(self, items):
         for i in items:
-            parent_tasks = self.get_parent_task(None, i)
-            yield parent_tasks
+            try:
+                parent_tasks = self.get_parent_task(None, i)
+                yield parent_tasks
+            except AttributeError:
+                pass
 
     def iterate_parent_project_and_tasks(self, tasks):
         for i in tasks:
-            project = self.get_project(i['project_id'])
-            due_date = get_parsed_date(i)
-            url = get_task_url(i)
-            yield i, project, '' if due_date is None else f'({due_date})', url
+            try:
+                project = self.get_project(i['project_id'])
+                due_date = get_parsed_date(i)
+                url = get_task_url(i)
+                yield i, project, '' if due_date is None else f'({due_date})', url
+            except AttributeError:
+                pass
 
     def convert_list_id_to_items(self, list_ids):
         for i in list_ids:
-            item = self.api.items.get(i)
-            yield item
+            try:
+                item = self.api.items.get(i)
+                yield item
+            except AttributeError:
+                pass
