@@ -60,9 +60,9 @@ def iterate_commands(content, commands, starts_with=True):
     return None
 
 
-def add_todoist_field(message, i, t, todo, timezone=None):
+def add_todoist_field(message, i, t, todo):
     project = todo.get_project(t['project_id'])
-    due_date = get_parsed_date(t, parentheses=True, timezone=timezone)
+    due_date = get_parsed_date(t, parentheses=True, timezone=todo.get_timezone())
     parent = todo.get_parent_task(None, item=t)
     url = get_task_url(parent['id'])
     message.add_field(name=f'{i}: {due_date} {project["project"]["name"]}',
@@ -77,7 +77,7 @@ def create_message_todoist(options, todo, priority=None):
         if priority is None or priority == task['priority']:
             message = discord.Embed() if message is None else message
             added_field += 1
-            add_todoist_field(message, i, task, todo, timezone=todo.get_timezone())
+            add_todoist_field(message, i, task, todo)
     if message is not None:
         if priority is not None:
             message.title = f"Priority {priority} task{'s' if added_field > 1 else ''}"
