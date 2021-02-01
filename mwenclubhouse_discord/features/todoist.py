@@ -1,23 +1,33 @@
 import todoist
 import os
 from datetime import datetime, timedelta
+import pytz
 
 from todoist.models import Item
 
 week_day_names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 
-def get_date(item):
+def get_date(item, timezone=None):
     if item['due'] is None:
         return None
-    return datetime.strptime(item['due']['date'], '%Y-%m-%d')
+    d = datetime.strptime(item['due']['date'], '%Y-%m-%d')
+    if timezone is not None:
+        tz = pytz.timezone(timezone)
+        d = tz.localize(d)
+    return d
 
 
-def get_parsed_date(task, parentheses=False):
-    item_time = get_date(task)
+def get_weekday_index(index):
+    return (index + 1) % 7
+
+
+def get_parsed_date(task, parentheses=False, timezone=None):
+    item_time = get_date(task, timezone=timezone)
+    now_time = datetime.now() if timezone is None else datetime.now(tz=pytz.timezone(timezone))
     if item_time is None:
         return ''
-    num_days = int((item_time - datetime.now()) / timedelta(days=1))
+    num_days = int((item_time - now_time) / timedelta(days=1))
     response = ''
     if num_days < 0:
         response = f'{-num_days} day{"s" if -num_days > 1 else ""} ago'
@@ -26,9 +36,10 @@ def get_parsed_date(task, parentheses=False):
     elif num_days == 1:
         response = f'Tomorrow'
     else:
-        if datetime.now().weekday() >= item_time.weekday():
+        if get_weekday_index(now_time.weekday()) >= get_weekday_index(item_time.weekday()):
             response += 'Next '
-        response += week_day_names[item_time.weekday()]
+        index = get_weekday_index(item_time.weekday())
+        response += week_day_names[index]
     return f'({response})' if parentheses and response != '' else response
 
 
@@ -100,7 +111,7 @@ class MWTodoist:
             return within_range and item['date_completed'] is None
 
         def sort_task(item):
-            key_value = get_date(item)
+            key_value = get_date(item, timezone=self.get_timezone())
             return key_value if key_value is not None else datetime.now()
 
         try:
@@ -156,3 +167,9 @@ class MWTodoist:
                 yield item
             except AttributeError:
                 pass
+
+    def get_timezone(self):
+        try:
+            return self.api['user']['tz_info']['timezone']
+        except AttributeError:
+            return None
