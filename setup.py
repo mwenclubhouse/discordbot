@@ -1,10 +1,22 @@
-from setuptools import setup
+import setuptools
 
-setup(
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
+setuptools.setup(
     name='mwenclubhouse-bot',
-    scripts=["bin/mwenclubhouse-discord"],
-    packages=['mwenclubhouse_discord'],
-    version='1.0',
+    install_requires=requirements,
     author="Matthew Wen",
+    author_email="mattwen2018@gmail.com",
+    scripts=["bin/mwenclubouse-discord"],
+    packages=setuptools.find_packages(),
+    version='1.0.0',
     python_requires='>=3.7',
+    classifiers=[
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+    ]
 )
