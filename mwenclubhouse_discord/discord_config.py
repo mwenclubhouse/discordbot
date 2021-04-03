@@ -24,7 +24,6 @@ from .wrappers.discord_wrapper import DiscordWrapper
 from .wrappers.firebase_wrapper import FirebaseWrapper
 from .common.utils import iterate_commands
 
-load_dotenv()
 client = discord.Client()
 DiscordWrapper.client = client
 DiscordWrapper.fire_b = FirebaseWrapper()
