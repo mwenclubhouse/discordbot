@@ -1,0 +1,16 @@
+[Unit]
+Description=Python Script For MWENCLUBHOUSE
+
+[Service]
+Environment=PYTHONUNBUFFERED=1
+Environment=PRODUCTION=1
+EnvironmentFile=%h/environments/mwenclubhouse_discord.environment
+WorkingDirectory=%h
+
+Type = simple
+StandardOutput=syslog
+StandardError=syslog
+ExecStart=/bin/bash -c "PATH=~/.local/bin:$PATH mwenclubhouse-discord"
+
+Restart=on-failure
+RestartSec=5

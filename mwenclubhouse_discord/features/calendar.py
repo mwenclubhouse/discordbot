@@ -122,6 +122,10 @@ class MWCalendar:
         except HttpError:
             return
 
+    def get_proper_end_time(self):
+        if self.service:
+            pass
+
     def complete_calendar(self, items):
         if self.service:
             now_time = datetime.now()
