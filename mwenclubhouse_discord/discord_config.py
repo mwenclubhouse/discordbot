@@ -1,6 +1,9 @@
 import discord
 import os
-from dotenv import load_dotenv
+if os.getenv("PRODUCTION", None) != "1":
+    from dotenv import load_dotenv
+
+    load_dotenv()
 
 from .commands import UserCommand
 from .commands.done import UserCommandDone
