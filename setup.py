@@ -8,7 +8,7 @@ setuptools.setup(
     install_requires=requirements,
     author="Matthew Wen",
     author_email="mattwen2018@gmail.com",
-    scripts=["bin/mwenclubouse-discord"],
+    scripts=["bin/mwenclubhouse-discord"],
     packages=setuptools.find_packages(),
     version='1.0.0',
     python_requires='>=3.7',
