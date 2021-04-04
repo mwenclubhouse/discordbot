@@ -1,6 +1,6 @@
 from google.oauth2.credentials import Credentials
 
-from .command import UserCommand
+from mwenclubhouse_discord.commands.command import UserCommand
 from mwenclubhouse_discord.common import UserResponse, create_simple_message
 from mwenclubhouse_discord.features.calendar import MWCalendar
 from mwenclubhouse_discord.wrappers.discord_wrapper import DiscordWrapper
@@ -8,10 +8,10 @@ from mwenclubhouse_discord.wrappers.discord_wrapper import DiscordWrapper
 
 class GAuthCommand(UserCommand):
 
-    def __init__(self, author, content, response: UserResponse):
-        super().__init__(author, content, response)
-        self.arg: str = content[7:]
-        self.gcal: MWCalendar = MWCalendar(author.id)
+    def __init__(self, message, response: UserResponse):
+        super().__init__(message, response)
+        self.arg: str = self.content[7:]
+        self.gcal: MWCalendar = MWCalendar(self.author.id)
 
     def create_pickle(self):
         cred: Credentials | None = self.gcal.get_credentials()

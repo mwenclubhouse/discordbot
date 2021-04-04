@@ -6,18 +6,17 @@ if os.getenv("PRODUCTION", None) != "1":
     load_dotenv()
 
 from .commands import UserCommand
-from .commands.done import UserCommandDone
-from .commands.gauthcommand import GAuthCommand
-from .commands.ls import UserCommandLS
-from .commands.cd import UserCd
-from .commands.postpone import UserCommandPostpone
-from .commands.tasks import UserCommandTasks
-from .commands.ppwd import UserPWD
-from .commands.leave import UserCommandLeave
-from .commands.join import UserCommandJoin
-from .commands.sch import UserCommandSch
-from .commands.command_break import UserCommandBreak
-from .commands.wait import UserCommandWait
+from mwenclubhouse_discord.commands.schedule.next_command import UserCommandDone
+from mwenclubhouse_discord.commands.schedule.gauth_command import GAuthCommand
+from mwenclubhouse_discord.commands.groupme.info_commands import UserCommandLS
+from mwenclubhouse_discord.commands.groupme.info_commands import UserCd, UserPWD
+from mwenclubhouse_discord.commands.schedule.next_command import UserCommandPostpone
+from mwenclubhouse_discord.commands.schedule.tasks_command import UserCommandTasks
+from mwenclubhouse_discord.commands.groupme.action_commands import UserCommandLeave
+from mwenclubhouse_discord.commands.groupme.action_commands import UserCommandJoin
+from mwenclubhouse_discord.commands.schedule.sch_command import UserCommandSch
+from mwenclubhouse_discord.commands.schedule.break_command import UserCommandBreak
+from mwenclubhouse_discord.commands.schedule.break_command import UserCommandWait
 from .common.user_response import UserResponse
 from .wrappers.calendar_wrapper import CalendarWrapper
 from .wrappers.discord_wrapper import DiscordWrapper
@@ -49,7 +48,7 @@ def create_scheduler_command(content):
 
 async def run(obj, message, response):
     if obj is not None:
-        inst: UserCommand = obj(message.author, message.content, response)
+        inst: UserCommand = obj(message, response)
         await response.send_loading(message)
         await inst.run()
 
