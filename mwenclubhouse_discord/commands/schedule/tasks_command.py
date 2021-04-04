@@ -1,4 +1,4 @@
-from .ls import UserCommandLS
+from mwenclubhouse_discord.commands.groupme.info_commands import UserCommandLS
 from mwenclubhouse_discord.wrappers.discord_wrapper import DiscordWrapper
 from mwenclubhouse_discord.common.utils import create_message_todoist, create_simple_message
 from mwenclubhouse_discord.features.todoist import MWTodoist
@@ -6,9 +6,8 @@ from mwenclubhouse_discord.features.todoist import MWTodoist
 
 class UserCommandTasks(UserCommandLS):
 
-    def __init__(self, author, content, response):
-        super().__init__(author, content, response)
-        response.loading = True
+    def __init__(self, message, response):
+        super().__init__(message, response)
         self.todo = MWTodoist()
 
     def set_raw_simple_category(self, category):

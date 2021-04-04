@@ -60,6 +60,13 @@ def iterate_commands(content, commands, starts_with=True):
     return None
 
 
+def iterate_emojis(emoji, commands):
+    for v, t in commands:
+        if v == emoji:
+            return t
+    return None
+
+
 def add_todoist_field(message, i, t, todo):
     project = todo.get_project(t['project_id'])
     due_date = get_parsed_date(t, parentheses=True, timezone=todo.get_timezone())

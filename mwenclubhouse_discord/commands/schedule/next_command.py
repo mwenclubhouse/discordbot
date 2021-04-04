@@ -1,15 +1,29 @@
 from datetime import datetime
 from typing import List
 
-from mwenclubhouse_discord.commands.sch import UserCommandSch
+from mwenclubhouse_discord.commands.schedule.sch_command import UserCommandSch
 from mwenclubhouse_discord.common import UserResponse
+from mwenclubhouse_discord.features.calendar import create_firebase_todo_calendar
 from mwenclubhouse_discord.wrappers.discord_wrapper import DiscordWrapper
+
+
+class LocalUser:
+
+    def __init__(self, user_id):
+        self.id = user_id
 
 
 class UserCommandDone(UserCommandSch):
 
-    def __init__(self, author, content, response: UserResponse):
-        super().__init__(author, content, response)
+    def __init__(self, message, response: UserResponse, payload):
+        self.payload = payload
+        response.edit_message = True
+        response.remove_emoji = [(payload.emoji.name, payload.member)]
+        super().__init__(message, response)
+
+    @property
+    def author(self):
+        return LocalUser(self.payload.user_id)
 
     async def get_new_today_task(self):
         response: List = DiscordWrapper.fire_b.get_property('today-task', self.author.id, [])
@@ -53,3 +67,16 @@ class UserCommandDone(UserCommandSch):
 
     async def sch_run(self):
         await self.mark_done()
+
+
+class UserCommandPostpone(UserCommandDone):
+
+    async def postpone(self):
+        top_item, response = await self.get_new_today_task()
+        if top_item is not None:
+            response.append(create_firebase_todo_calendar(task_id=top_item['task_id'], title=top_item['title']))
+        await self.reformat_calendar(response)
+        await self.list_action()
+
+    async def run(self):
+        await self.postpone()

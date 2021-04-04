@@ -1,12 +1,12 @@
-from mwenclubhouse_discord.commands.done import UserCommandDone
+from mwenclubhouse_discord.commands.schedule.next_command import UserCommandDone
 from mwenclubhouse_discord.common import UserResponse
 from mwenclubhouse_discord.features.calendar import create_firebase_todo_calendar
 
 
 class UserCommandBreak(UserCommandDone):
 
-    def __init__(self, author, content, response: UserResponse):
-        super().__init__(author, content, response)
+    def __init__(self, message, response: UserResponse, payload):
+        super().__init__(message, response, payload)
 
     async def insert_break(self, redo_task=True, title='break'):
         top_item, response = await self.get_new_today_task()
@@ -19,3 +19,10 @@ class UserCommandBreak(UserCommandDone):
 
     async def run(self):
         await self.insert_break()
+
+
+class UserCommandWait(UserCommandBreak):
+
+    async def run(self):
+        await self.insert_break(redo_task=False, title='wait')
+

@@ -5,20 +5,20 @@ from mwenclubhouse_discord.common.utils import *
 from mwenclubhouse_discord.features.calendar import MWCalendar, create_firebase_todo_calendar
 from mwenclubhouse_discord.features.todoist import MWTodoist
 from mwenclubhouse_discord.wrappers.discord_wrapper import DiscordWrapper
-from . import UserCommand
+from mwenclubhouse_discord.commands import UserCommand
 from mwenclubhouse_discord.common.error import UserError
 
 
 class UserCommandSch(UserCommand):
 
-    def __init__(self, author, content: str, response: UserResponse):
-        super().__init__(author, content, response)
+    def __init__(self, message, response: UserResponse):
+        super().__init__(message, response)
         self.args = None
-        self.parse_arguments(content)
+        self.parse_arguments(self.content)
         self.tasks = []
         self.raw_tasks = []
         self.todo: MWTodoist = MWTodoist()
-        self.gcal: MWCalendar = MWCalendar(author.id)
+        self.gcal: MWCalendar = MWCalendar(self.author.id)
 
     def parse_arguments(self, content):
         args = content[5:]
@@ -189,6 +189,7 @@ class UserCommandSch(UserCommand):
         self.set_raw_simple_tasks(user_tasks)
         response = create_message_todoist_and_title(self.raw_tasks, self.todo)
         self.response.add_response(response, done=True)
+        self.response.new_message_emojis = ['✅', '⏭', '⌛', '🥛', '🔀']
 
     async def move_action(self):
         idx1, idx2 = self.get_two_arguments()
