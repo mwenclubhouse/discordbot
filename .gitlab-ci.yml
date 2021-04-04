@@ -1,14 +1,13 @@
-before_script:
-  - apt-get update -qq
-  - apt-get install -qq ssh sshpass
-
 deploy_staging:
-  environment:
-    name: staging
-    url: $HOST
+  stage: deploy
+  image: ubuntu:latest
+  environment: Staging
   script:
+    - apt-get update -qq
+    - apt-get install -qq ssh sshpass
+    - sshpass -V
     - echo $USERNAME
     - export SSHPASS=$PASSWORD
-    - sshpass -e ssh -p $PORT $USERNAME@$HOST '/home/$USERNAME/scripts/mwenclubhouse-discord.sh'
+    - sshpass -e ssh -p $PORT $USERNAME@$HOST '/home/mwen/scripts/mwenclubhouse-discord.sh'
   only:
     - main
