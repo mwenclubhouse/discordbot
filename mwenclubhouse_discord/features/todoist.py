@@ -3,8 +3,6 @@ import os
 from datetime import datetime, timedelta
 import pytz
 
-from todoist.models import Item
-
 week_day_names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 
@@ -86,7 +84,7 @@ class MWTodoist:
         except AttributeError:
             return None
 
-    def move_task_to_section(self, name, task: Item):
+    def move_task_to_section(self, name, task):
         try:
             destination = self.get_section_by_name(name, task['project_id'])
             if destination is not None:
