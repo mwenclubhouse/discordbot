@@ -7,6 +7,7 @@ deploy_staging:
     name: staging
     url: $HOST
   script:
-    - script -qc "sshpass -p $PASSWORD ssh -p $PORT $USERNAME@$HOST /home/$USERNAME/scripts/mwenclubhouse-discord.sh"
+    - echo $USERNAME
+    - sshpass -p $PASSWORD ssh -p $PORT $USERNAME@$HOST /home/$USERNAME/scripts/mwenclubhouse-discord.sh
   only:
     - main
