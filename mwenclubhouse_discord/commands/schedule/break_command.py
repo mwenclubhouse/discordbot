@@ -5,6 +5,9 @@ from mwenclubhouse_discord.features.calendar import create_firebase_todo_calenda
 
 class UserCommandBreak(UserCommandDone):
 
+    def __init__(self, message, response: UserResponse, payload):
+        super().__init__(message, response, payload)
+
     async def insert_break(self, redo_task=True, title='break'):
         top_item, response = await self.get_new_today_task()
         response.insert(0, create_firebase_todo_calendar(title=title))

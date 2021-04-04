@@ -11,10 +11,14 @@ class UserResponse:
         self.response = []
         self.done = done
         self.emoji = []
+        self.remove_emoji = []
+        self.new_message_emojis = []
 
         # (Channel, Author, Access)
         self.permissions = []
         self.loading = False
+        self.delete_message = False
+        self.edit_message = False
 
     @property
     def response_tail(self):
@@ -61,10 +65,22 @@ class UserResponse:
     async def send_message(self, message):
         for author, channel, access in self.permissions:
             await channel.set_permissions(author, read_messages=access, send_messages=access)
+
         for i in self.emoji:
             await message.add_reaction(i)
-        for i in self.response:
-            if type(i) is str:
-                await message.channel.send(i)
-            else:
-                await message.channel.send(embed=i)
+        for emoji, member in self.remove_emoji:
+            await message.remove_reaction(emoji, member)
+
+        channel = message.channel
+        if self.delete_message:
+            await message.delete()
+        elif self.edit_message and len(self.response) > 0:
+            await message.edit(embed=self.response[0])
+        else:
+            for i in self.response:
+                if type(i) is str:
+                    new_message = await channel.send(i)
+                else:
+                    new_message = await channel.send(embed=i)
+                for reaction in self.new_message_emojis:
+                    await new_message.add_reaction(reaction)

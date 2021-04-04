@@ -1,5 +1,6 @@
 import discord
 import os
+
 if os.getenv("PRODUCTION", None) != "1":
     from dotenv import load_dotenv
 
@@ -21,7 +22,7 @@ from .common.user_response import UserResponse
 from .wrappers.calendar_wrapper import CalendarWrapper
 from .wrappers.discord_wrapper import DiscordWrapper
 from .wrappers.firebase_wrapper import FirebaseWrapper
-from .common.utils import iterate_commands
+from .common.utils import iterate_commands, iterate_emojis
 
 client = discord.Client()
 DiscordWrapper.client = client
@@ -37,42 +38,81 @@ def create_direct_command(content):
     ])
 
 
-def create_scheduler_command(content):
+def create_scheduler_message_command(content):
     return iterate_commands(content, [
         ('$tasks', UserCommandTasks),
         ('$sch', UserCommandSch), ('$gauth', GAuthCommand),
-        ('$done', UserCommandDone), ('$break', UserCommandBreak),
-        ('$wait', UserCommandWait), ('$postpone', UserCommandPostpone)
+
     ])
 
 
-async def run(obj, message, response):
+def create_scheduler_emoji_command(emoji):
+    return iterate_emojis(emoji, [
+        ('✅', UserCommandDone), ('⏭', UserCommandDone), ('🥛', UserCommandBreak),
+        ('⌛', UserCommandWait), ('🔀', UserCommandPostpone)
+    ])
+
+
+async def run(obj, message, response, payload=None):
     if obj is not None:
-        inst: UserCommand = obj(message, response)
+        if payload is None:
+            inst: UserCommand = obj(message, response)
+        else:
+            inst: UserCommand = obj(message, response, payload)
+
         await response.send_loading(message)
         await inst.run()
 
 
+def is_correct_channel(message, channel_name):
+    if not DiscordWrapper.fire_b.is_bot_channel(message.channel.id, channel_name):
+        if type(message.channel) is not discord.DMChannel:
+            return False
+    return True
+
+
 async def handle_direct_message(message, response: UserResponse):
-    if not response.done:
-        if not DiscordWrapper.fire_b.is_bot_channel(message.channel.id, 'bot-command'):
-            if type(message.channel) is not discord.DMChannel:
-                return
+    if is_correct_channel(message, 'bot-command'):
         content = message.content.lower()
         await run(create_direct_command(content), message, response)
 
 
 async def handle_scheduler_message(message, response: UserResponse):
-    if not response.done:
-        if not DiscordWrapper.fire_b.is_bot_channel(message.channel.id, 'bot-schedule'):
-            return
-        obj = create_scheduler_command(message.content)
+    if is_correct_channel(message, 'bot-schedule'):
+        obj = create_scheduler_message_command(message.content)
         await run(obj, message, response)
+
+
+async def handle_schedule_emoji(message, emoji, response: UserResponse, payload):
+    """
+    done: ✅
+    next: ⏭️
+    wait: ⌛
+    break: 🥛
+    postpone: 🔀
+    """
+    if is_correct_channel(message, 'bot-schedule'):
+        obj = create_scheduler_emoji_command(emoji)
+        await run(obj, message, response, payload=payload)
 
 
 @client.event
 async def on_ready():
     pass
+
+
+@client.event
+async def on_raw_reaction_add(payload: discord.raw_models.RawReactionActionEvent):
+    if payload.user_id == client.user.id:
+        return
+    response: UserResponse = UserResponse()
+    message: discord.message.Message = await DiscordWrapper.get_message(payload.channel_id, payload.message_id)
+    list_type = [handle_schedule_emoji]
+
+    for i in list_type:
+        await i(message, payload.emoji.name, response, payload)
+        if response.done:
+            await response.send_message(message)
 
 
 @client.event

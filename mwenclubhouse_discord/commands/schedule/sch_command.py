@@ -189,6 +189,7 @@ class UserCommandSch(UserCommand):
         self.set_raw_simple_tasks(user_tasks)
         response = create_message_todoist_and_title(self.raw_tasks, self.todo)
         self.response.add_response(response, done=True)
+        self.response.new_message_emojis = ['✅', '⏭', '⌛', '🥛', '🔀']
 
     async def move_action(self):
         idx1, idx2 = self.get_two_arguments()
