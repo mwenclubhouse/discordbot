@@ -267,8 +267,9 @@ class MyEventQueue:
         return min_value
 
     def get_end_time(self, end_time):
-        end_time = datetime.now() if end_time is None else end_time
+        self.end_time = datetime.now() if end_time is None else end_time
         space_allocated = self.get_available_time(min_val=None)
+        end_time = self.end_time
         if space_allocated <= 0:
             seconds = 60 * 60 * len(self.tasks) - space_allocated
             end_time += timedelta(seconds=seconds)
