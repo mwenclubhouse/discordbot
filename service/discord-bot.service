@@ -10,7 +10,7 @@ WorkingDirectory=%h
 Type = simple
 StandardOutput=syslog
 StandardError=syslog
-ExecStart=/bin/bash -c "PATH=~/.local/bin:$PATH mwenclubhouse-discord"
+ExecStart=/bin/bash -c "PATH=~/.local/bin:/usr/local/bin:$PATH mwenclubhouse-discord"
 
 Restart=on-failure
 RestartSec=5
