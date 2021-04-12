@@ -3,7 +3,7 @@ cd "$(dirname "$0")" || exit
 cd ../
 git fetch origin
 git reset --hard origin/development
-pip uninstall mwenclubhouse-bot -y
+pip3 uninstall mwenclubhouse-bot -y
 python3 setup.py install
 cp service/discord-bot.service /lib/systemd/system/
 systemctl daemon-reload
