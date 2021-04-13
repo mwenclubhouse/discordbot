@@ -15,7 +15,7 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          password: ${{secrets.PASSWORD }}
+          key: ${{secrets.KEY }}
           port: ${{ secrets.PORT }}
           script: |
-            ./scripts/mwenclubhouse-discord.sh
+            ./scripts/discord-bot.sh
