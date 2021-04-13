@@ -82,8 +82,8 @@ class UserCommandSch(UserCommand):
                 item = create_firebase_todo_calendar(title=i)
             response.append(item)
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
-        await self.list_action()
         await self.update_calendar(response)
+        await self.list_action()
 
     def is_valid_index(self, idx, items):
         if idx >= len(items):
@@ -92,7 +92,7 @@ class UserCommandSch(UserCommand):
     def getting_options_and_parameters(self):
         idx1, idx2 = self.get_two_arguments(idx2_can_be_string=True)
         if self.response.done:
-            return
+            return None, [], None, None
         # Users Schedule
         response: List = DiscordWrapper.fire_b.get_property('today-task', self.author.id, [])
         self.is_valid_index(idx1, response)
@@ -120,8 +120,8 @@ class UserCommandSch(UserCommand):
             item = create_firebase_todo_calendar(title=idx2)
         response.insert(idx1, item)
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
-        await self.list_action()
         await self.update_calendar(response)
+        await self.list_action()
 
     async def set_action(self):
         idx1, response, idx2, selection_options = self.getting_options_and_parameters()
@@ -135,8 +135,8 @@ class UserCommandSch(UserCommand):
         else:
             response[idx1] = create_firebase_todo_calendar(title=idx2)
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
-        await self.list_action()
         await self.update_calendar(response)
+        await self.list_action()
 
     async def swap_action(self):
         idx1, idx2 = self.get_two_arguments()
@@ -145,8 +145,8 @@ class UserCommandSch(UserCommand):
             swap_items(response, idx1, idx2, lambda: self.response.set_error_response(0))
             if not self.response.done:
                 DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
-            await self.list_action()
             await self.update_calendar(response)
+            await self.list_action()
 
     def adjust_calendar(self, user_tasks, end_time=None, set_start_time_now=True):
         end_time, user_tasks = self.gcal.add_tasks_to_calendar(user_tasks, end_time, self.todo, set_start_time_now)
@@ -204,8 +204,8 @@ class UserCommandSch(UserCommand):
         del response[idx1]
         response.insert(idx2, item)
         DiscordWrapper.fire_b.set_property('today-task', self.author.id, response)
-        await self.list_action()
         await self.update_calendar(response)
+        await self.list_action()
 
     def create_sch_action(self):
         return iterate_commands(self.args[0], [

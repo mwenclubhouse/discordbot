@@ -321,7 +321,7 @@ class MyEventQueue:
 
         # Check Event End
         if next_event:
-            if time_after_event_start(next_event, start_time + timedelta(seconds=d)):
+            if time_in_event(next_event, start_time + timedelta(seconds=d)):
                 d = parse_google_cal_event_time(next_event, 'start').timestamp() - start_time.timestamp()
                 self.tasks_duration[0] -= d
                 next_start = parse_google_cal_event_time(next_event, 'end')
