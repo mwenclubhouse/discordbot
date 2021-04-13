@@ -1,5 +1,6 @@
 from datetime import datetime, timezone, timedelta
 
+from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
 
 from mwenclubhouse_discord.features.todoist import MWTodoist, get_task_url
@@ -69,6 +70,7 @@ class MWCalendar:
         self.author_id = author_id
         self.cred = self.get_credentials()
         self.service = self.get_service()
+        self._timezone = None
 
     def is_logged_in(self):
         return self.cred is not None and self.service is not None
@@ -100,26 +102,27 @@ class MWCalendar:
             location = f'discord/{self.author_id}/token.pickle'
             DiscordWrapper.fire_b.upload_file(location, response)
             return True
-        except:
+        except Exception as e:
+            print(e)
             return False
 
     @property
     def timezone(self):
-        if self.service:
+        if self._timezone is None and self.service:
             try:
                 response = self.service.settings().get(setting="timezone").execute()
                 if response:
-                    return response['value']
+                    self._timezone = response['value']
             except HttpError:
                 pass
-        return None
+        return self._timezone
 
     def delete_calendar(self, item):
         try:
             if item['cal_id'] is not None:
                 self.service.events().delete(calendarId='primary', eventId=item['cal_id']).execute()
                 item['cal_id'] = None
-        except HttpError:
+        except (HttpError, RefreshError) as e:
             return
 
     def get_proper_end_time(self):
