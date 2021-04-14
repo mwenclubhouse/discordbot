@@ -115,7 +115,7 @@ async def on_raw_reaction_add(payload: discord.raw_models.RawReactionActionEvent
             await response.send_message(message)
 
 
-def message_handler(message):
+async def message_handler(message):
     if message.author == client.user:
         return
     response: UserResponse = UserResponse()
@@ -129,7 +129,7 @@ def message_handler(message):
 
 @client.event
 async def on_message(message):
-    message_handler(message)
+    await message_handler(message)
 
 
 @client.event
@@ -137,7 +137,7 @@ async def on_raw_message_edit(payload: discord.RawMessageUpdateEvent):
     channel = client.get_channel(payload.channel_id)
     if type(channel) == discord.TextChannel:
         message: discord.Message = await channel.fetch_message(payload.message_id)
-        message_handler(message)
+        await message_handler(message)
 
 
 def run_discord():
