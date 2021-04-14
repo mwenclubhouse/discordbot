@@ -129,6 +129,7 @@ class MWCalendar:
         if self.service:
             pass
 
+    # TODO: UPDATE TO WRAP EVENTS!!
     def complete_calendar(self, items):
         if self.service:
             now_time = datetime.now()
