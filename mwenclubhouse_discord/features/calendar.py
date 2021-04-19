@@ -64,6 +64,15 @@ def update_calendar(author_id):
     pass
 
 
+def update_event(event_details, event_item, user_timezone, service):
+    event_details['end'] = {'dateTime': datetime.utcnow().isoformat() + 'Z', 'timeZone': user_timezone}
+    try:
+        service.events().update(calendarId='primary', eventId=event_item['cal_id'],
+                                body=event_details).execute()
+    except HttpError:
+        pass
+
+
 class MWCalendar:
 
     def __init__(self, author_id):
@@ -130,36 +139,20 @@ class MWCalendar:
             pass
 
     # TODO: UPDATE TO WRAP EVENTS!!
-    def complete_calendar(self, items):
-        if self.service:
+    def complete_calendar(self, items, todo: MWTodoist):
+        service = self.service
+        if service and len(items) > 1:
             now_time = datetime.now()
             user_timezone = self.timezone
 
-            def update_event(event_details, event_item):
-                event_details['end'] = {'dateTime': datetime.utcnow().isoformat() + 'Z', 'timeZone': user_timezone}
-                try:
-                    self.service.events().update(calendarId='primary', eventId=event_item['cal_id'],
-                                                 body=event_details).execute()
-                except HttpError:
-                    pass
-
-            did_update, last_detail, last_item = False, None, None
             for item in items:
-                details = self.service.events().get(calendarId='primary', eventId=item['cal_id']).execute()
-                if user_timezone is None or details is None:
-                    continue
-                start = parse_google_cal_event_time(details, 'start')
-                end = parse_google_cal_event_time(details, 'end')
-                if end.timestamp() <= now_time.timestamp():
-                    last_detail, last_item = details, item
-                elif time_in_event(details, now_time):
-                    did_update = True
-                    update_event(details, item)
-                elif now_time.timestamp() <= start.timestamp():
-                    self.delete_calendar(item)
+                self.delete_calendar(item)
 
-            if (not did_update) and last_item is not None and last_detail is not None:
-                update_event(last_detail, last_item)
+            items = [items[0]]
+            event_queue = MyEventQueue(service, items, now_time, set_start_time_now=False, set_hard_deadline=True)
+            for task, start_time, end_time in event_queue:
+                details = create_cal_event_from_todoist(task, todo, start_time, end_time, user_timezone)
+                edit_event(task, self.service, details)
 
     def clean_calendar(self, items):
         i, last_item = 0, None
@@ -173,10 +166,10 @@ class MWCalendar:
                 last_item = items[i]
                 i += 1
 
-    def add_tasks_to_calendar(self, items, end, todo: MWTodoist, set_start_time_now=True):
+    def add_tasks_to_calendar(self, items, end, todo: MWTodoist, set_start_time_now=True, set_hard_deadline=False):
         if self.service:
             self.clean_calendar(items)
-            events = MyEventQueue(self.service, items, end, set_start_time_now)
+            events = MyEventQueue(self.service, items, end, set_start_time_now, set_hard_deadline)
             new_items = []
             user_timezone = self.timezone
             for task, start_time, end_time in events:
@@ -222,7 +215,8 @@ def get_iso_from_datetime(datetime_item):
 
 class MyEventQueue:
 
-    def __init__(self, service, tasks, end_time, set_start_time_now=True):
+    def __init__(self, service, tasks, end_time, set_start_time_now=True, set_hard_deadline=False):
+        self.set_hard_deadline = set_hard_deadline
         self.tasks = tasks
         self.service = service
         self.start_time = self.get_start_time(set_start_time_now)
@@ -274,7 +268,7 @@ class MyEventQueue:
         self.end_time = datetime.now() if end_time is None else end_time
         space_allocated = self.get_available_time(min_val=None)
         end_time = self.end_time
-        if space_allocated <= 0:
+        if not self.set_hard_deadline and space_allocated <= 0:
             seconds = 60 * 60 * len(self.tasks) - space_allocated
             end_time += timedelta(seconds=seconds)
         return end_time
@@ -293,7 +287,8 @@ class MyEventQueue:
         if len(self.tasks) == 0:
             return []
         duration = self.get_available_time(min_val=0) / len(self.tasks)
-        duration = (45 * 60) if duration <= (45 * 60) else duration
+        if not self.set_hard_deadline:
+            duration = (45 * 60) if duration <= (45 * 60) else duration
         return [duration for _ in self.tasks]
 
     def parse_next_calendar_event(self):
