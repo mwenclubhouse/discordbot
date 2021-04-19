@@ -145,11 +145,12 @@ class MWCalendar:
             now_time = datetime.now()
             user_timezone = self.timezone
 
+            items = [items[0]]
+            event_queue = MyEventQueue(service, items, now_time, set_start_time_now=False, set_hard_deadline=True)
+
             for item in items:
                 self.delete_calendar(item)
 
-            items = [items[0]]
-            event_queue = MyEventQueue(service, items, now_time, set_start_time_now=False, set_hard_deadline=True)
             for task, start_time, end_time in event_queue:
                 details = create_cal_event_from_todoist(task, todo, start_time, end_time, user_timezone)
                 edit_event(task, self.service, details)
