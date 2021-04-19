@@ -141,7 +141,7 @@ class MWCalendar:
     # TODO: UPDATE TO WRAP EVENTS!!
     def complete_calendar(self, items, todo: MWTodoist):
         service = self.service
-        if service and len(items) > 1:
+        if service and len(items) > 0:
             now_time = datetime.now()
             user_timezone = self.timezone
 
