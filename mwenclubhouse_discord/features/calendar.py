@@ -150,6 +150,10 @@ class MWCalendar:
 
             for item in items:
                 self.delete_calendar(item)
+                item['cal_id'] = None
+
+            # Safety precaution
+            new_items[0]['cal_id'] = None
 
             for task, start_time, end_time in event_queue:
                 details = create_cal_event_from_todoist(task, todo, start_time, end_time, user_timezone)
