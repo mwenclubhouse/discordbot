@@ -4,6 +4,7 @@ from typing import List
 from mwenclubhouse_discord.commands.schedule.sch_command import UserCommandSch
 from mwenclubhouse_discord.common import UserResponse
 from mwenclubhouse_discord.features.calendar import create_firebase_todo_calendar
+from mwenclubhouse_discord.features.todoist import MWTodoist
 from mwenclubhouse_discord.wrappers.discord_wrapper import DiscordWrapper
 
 
@@ -20,6 +21,7 @@ class UserCommandDone(UserCommandSch):
         response.edit_message = True
         response.remove_emoji = [(payload.emoji.name, payload.member)]
         super().__init__(message, response)
+        self.todo = MWTodoist()
 
     @property
     def author(self):
@@ -48,7 +50,7 @@ class UserCommandDone(UserCommandSch):
             i = len(response)
 
         if not delete_event:
-            self.gcal.complete_calendar(response[:i])
+            self.gcal.complete_calendar(response[:i], self.todo)
         return top_item, response[i:]
 
     async def reformat_calendar(self, response):

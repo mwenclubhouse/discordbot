@@ -139,7 +139,7 @@ class MWCalendar:
             pass
 
     # TODO: UPDATE TO WRAP EVENTS!!
-    def complete_calendar(self, items):
+    def complete_calendar(self, items, todo: MWTodoist):
         service = self.service
         if service and len(items) > 1:
             now_time = datetime.now()
@@ -150,6 +150,9 @@ class MWCalendar:
 
             items = [items[0]]
             event_queue = MyEventQueue(service, items, now_time, set_start_time_now=False, set_hard_deadline=True)
+            for task, start_time, end_time in event_queue:
+                details = create_cal_event_from_todoist(task, todo, start_time, end_time, user_timezone)
+                edit_event(task, self.service, details)
 
     def clean_calendar(self, items):
         i, last_item = 0, None
@@ -213,6 +216,7 @@ def get_iso_from_datetime(datetime_item):
 class MyEventQueue:
 
     def __init__(self, service, tasks, end_time, set_start_time_now=True, set_hard_deadline=False):
+        self.set_hard_deadline = set_hard_deadline
         self.tasks = tasks
         self.service = service
         self.start_time = self.get_start_time(set_start_time_now)
@@ -223,7 +227,6 @@ class MyEventQueue:
         self.tasks_duration = self.create_duration_stack()
 
         self.iterated_items = []
-        self.set_hard_deadline = set_hard_deadline
 
     def get_events(self, end):
         if end is None:
