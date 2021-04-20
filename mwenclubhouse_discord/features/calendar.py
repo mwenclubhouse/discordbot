@@ -193,14 +193,15 @@ def get_event_duration(event, min_start=None):
     start = parse_google_cal_event_time(event, 'start')
     if min_start is not None:
         start = start if start.timestamp() > min_start.timestamp() else min_start
+    now = datetime.now()
     end = parse_google_cal_event_time(event, 'end')
+    end = now if now.timestamp() < end.timestamp() else end
     return end.timestamp() - start.timestamp()
 
 
 def time_in_event(event, t):
     start = parse_google_cal_event_time(event, 'start')
-    end = parse_google_cal_event_time(event, 'end')
-    return start.timestamp() <= t.timestamp() <= end.timestamp()
+    return start.timestamp() <= t.timestamp()
 
 
 def time_after_event_start(event, t):
@@ -235,7 +236,7 @@ class MyEventQueue:
 
     def get_events(self, end):
         if end is None:
-            end = datetime.utcnow() + timedelta(hours=24)
+            end = datetime.now() + timedelta(hours=24)
         if self.service:
             try:
                 events_result = self.service.events().list(calendarId='primary',
