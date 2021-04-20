@@ -189,13 +189,14 @@ def parse_google_cal_event_time(event, key):
     return datetime.strptime(event[key]['dateTime'], "%Y-%m-%dT%H:%M:%S%z")
 
 
-def get_event_duration(event, min_start=None):
+def get_event_duration(event, min_start=None, hard_deadline=False):
     start = parse_google_cal_event_time(event, 'start')
     if min_start is not None:
         start = start if start.timestamp() > min_start.timestamp() else min_start
-    now = datetime.now()
     end = parse_google_cal_event_time(event, 'end')
-    end = now if now.timestamp() < end.timestamp() else end
+    if hard_deadline:
+        now = datetime.now()
+        end = now if now.timestamp() < end.timestamp() else end
     return end.timestamp() - start.timestamp()
 
 
@@ -284,7 +285,7 @@ class MyEventQueue:
         time_available = self.end_time.timestamp() - self.start_time.timestamp()
         for i in self.events:
             if i['id'] not in calendar_set:
-                time_available -= get_event_duration(i, min_start=self.start_time)
+                time_available -= get_event_duration(i, min_start=self.start_time, hard_deadline=self.set_hard_deadline)
         if min_val is not None:
             time_available = time_available if time_available > min_val else min_val
         return time_available
