@@ -203,7 +203,7 @@ def get_event_duration(event, min_start=None, hard_deadline=False):
 def time_in_event(event, t):
     start = parse_google_cal_event_time(event, 'start')
     end = parse_google_cal_event_time(event, 'end')
-    return start.timestamp() <= t.timestamp() or t.timestamp() <= end
+    return start.timestamp() <= t.timestamp() or t.timestamp() <= end.timestamp()
 
 
 def time_after_event_start(event, t):
