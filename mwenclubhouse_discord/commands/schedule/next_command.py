@@ -50,7 +50,7 @@ class UserCommandDone(UserCommandSch):
             i = len(response)
 
         if not delete_event:
-            self.gcal.complete_calendar(response[:i], self.todo)
+            self.gcal.complete_calendar(response[:i], response, self.todo)
         return top_item, response[i:]
 
     async def reformat_calendar(self, response):

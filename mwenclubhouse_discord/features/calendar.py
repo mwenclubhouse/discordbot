@@ -139,7 +139,7 @@ class MWCalendar:
             pass
 
     # TODO: UPDATE TO WRAP EVENTS!!
-    def complete_calendar(self, items, todo: MWTodoist):
+    def complete_calendar(self, items, user_other_items, todo: MWTodoist):
         service = self.service
         if service and len(items) > 0:
             now_time = datetime.now()
@@ -147,6 +147,7 @@ class MWCalendar:
 
             new_items = [items[0]]
             event_queue = MyEventQueue(service, new_items, now_time, set_start_time_now=False, set_hard_deadline=True)
+            event_queue.add_to_calendar_set(user_other_items)
 
             for item in items:
                 self.delete_calendar(item)
@@ -202,8 +203,7 @@ def get_event_duration(event, min_start=None, hard_deadline=False):
 
 def time_in_event(event, t):
     start = parse_google_cal_event_time(event, 'start')
-    end = parse_google_cal_event_time(event, 'end')
-    return start.timestamp() <= t.timestamp() or t.timestamp() <= end.timestamp()
+    return start.timestamp() <= t.timestamp()
 
 
 def time_after_event_start(event, t):
@@ -250,6 +250,12 @@ class MyEventQueue:
             except HttpError:
                 pass
         return []
+
+    def add_to_calendar_set(self, other_events):
+        calendar_set = self.calendar_set
+        for i in other_events:
+            calendar_set.add(i['cal_id'])
+        self.tasks_duration = self.create_duration_stack()
 
     def get_calendar_set(self):
         calendar_id = set()
